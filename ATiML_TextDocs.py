@@ -9,15 +9,15 @@ import re
 import pandas as pd
 import os
   
-cols = ["docno", "date", "title", "text"]
+cols = ["file","docno", "date", "title", "text"]
 rows = []
-for filename in os.listdir(r'C:\Users\Shimony\Desktop\SHIMO\MS DE\SemII\ATiML\ATiML_Assignments\Project\ATiML_TREC_4_5_Dataset\TREC_4_5\FBIS'):
-    
-        with open(os.path.join(r'C:\Users\Shimony\Desktop\SHIMO\MS DE\SemII\ATiML\ATiML_Assignments\Project\ATiML_TREC_4_5_Dataset\TREC_4_5\FBIS', filename)) as f:
+#Change Directory  before running.
+for filename in os.listdir(r'/Users/visakh/GitHub/project/ATiML_TREC_4_5_Dataset/TREC_4_5/FBIS'):
+    try:
+        with open(os.path.join(r'/Users/visakh/GitHub/project/ATiML_TREC_4_5_Dataset/TREC_4_5/FBIS',filename),encoding="ISO-8859-1") as f:
 #         with open(filename, 'r') as f:
             doc_string = f.read()
             f.close()
-
         doc_string_str = doc_string.replace('TEXT', 'htmltag')
         doc_string = doc_string_str.encode()
 
@@ -33,15 +33,20 @@ for filename in os.listdir(r'C:\Users\Shimony\Desktop\SHIMO\MS DE\SemII\ATiML\AT
             docno = doc.find("docno").text
             text = doc.find("htmltag").text
             title = doc.find("ti").text
-#             date = doc.find("date1").text
+            date = doc.find("date1").text
   
-            rows.append({"docno": docno,
+            rows.append({"file":filename,
+                        "docno": docno,
                          "text": text,
                          "title": title,
                          "date": date
                         })
-  
-        df = pd.DataFrame(rows, columns=cols)
+
+
+    except Exception as e:
+            pass
+
+df = pd.DataFrame(rows, columns=cols )
 #         print(df.head())
-        df.to_csv('output1.csv')
+df.to_csv('output1.csv',index=False)
 
