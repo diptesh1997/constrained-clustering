@@ -7,8 +7,6 @@ rows = []
 # data_source = ['FBIS','FR94','FT','LATIMES']
 data_source = ['FBIS']
 data_path = "./ATiML_TREC_4_5_Dataset/TREC_4_5/"
-file_path = []
-
 
 def process_file(file_path):
     try:
