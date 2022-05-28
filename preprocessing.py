@@ -1,7 +1,4 @@
-from email.mime import base
-from fileinput import filename
 from bs4 import BeautifulSoup
-import re
 import pandas as pd
 import os
 
