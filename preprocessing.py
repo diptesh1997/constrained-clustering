@@ -2,10 +2,10 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import os
 
-cols = ["file", "docno", "date", "title", "text"]
+cols = ["docno", "text"]
 rows = []
 # data_source = ['FBIS','FR94','FT','LATIMES']
-data_source = ['FT']
+data_source = ['FBIS']
 data_path = "./ATiML_TREC_4_5_Dataset/TREC_4_5/"
 file_path = []
 
@@ -21,10 +21,7 @@ def process_file(file_path):
         for doc in doc_list:
             docno = doc.find("docno").text
             text = doc.find("text").text
-            title = doc.find("headline").text
-            date = doc.find("date").text
-            rows.append({"docno": docno, "date": date,
-                        "title": title, "text": text})
+            rows.append({"docno": docno, "text": text})
     except Exception as e:
             pass
 

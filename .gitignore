@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#dataset
+ATiML_TREC_4_5_Dataset/
+
+#output
+news_articles.csv
