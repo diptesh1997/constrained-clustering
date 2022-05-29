@@ -1,12 +1,43 @@
-from bs4 import BeautifulSoup
-import pandas as pd
 import os
+import string
+import pandas as pd
+import re
+
+from bs4 import BeautifulSoup
+from nltk.corpus import stopwords
+from nltk.stem.porter import PorterStemmer
+
 
 cols = ["docno", "text"]
 rows = []
-# data_source = ['FBIS','FR94','FT','LATIMES']
-data_source = ['FBIS']
+data_source = ['FBIS','FR94','FT','LATIMES']
+# data_source = ['FR94']
+
 data_path = "./ATiML_TREC_4_5_Dataset/TREC_4_5/"
+PUNCT_TO_REMOVE = string.punctuation
+STOPWORDS = set(stopwords.words('english'))
+stemmer = PorterStemmer()
+
+def remove_punctuation(text):
+    return text.translate(str.maketrans('', '', PUNCT_TO_REMOVE))
+
+def remove_stopwords(text):
+    return " ".join([word for word in str(text).split() if word not in STOPWORDS])
+
+def stem_words(text):
+    return " ".join([stemmer.stem(word) for word in text.split()])
+
+def remove_urls(text):
+    url_pattern = re.compile(r'https?://\S+|www\.\S+')
+    return url_pattern.sub(r'', text)
+
+def preprocessing_pipeline(text):
+    processed_text_1 = remove_urls(text)
+    processed_text_2 = remove_punctuation(processed_text_1)
+    processed_text_3 = remove_stopwords(processed_text_2)
+    processed_text_4 = stem_words(processed_text_3)
+    return processed_text_4
+
 
 def process_file(file_path):
     try:
@@ -17,8 +48,8 @@ def process_file(file_path):
         doc_list = soup.select('DOC')
         print(len(doc_list))
         for doc in doc_list:
+            text = preprocessing_pipeline(doc.find("text").text)
             docno = doc.find("docno").text
-            text = doc.find("text").text
             rows.append({"docno": docno, "text": text})
     except Exception as e:
             pass
