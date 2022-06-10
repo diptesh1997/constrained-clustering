@@ -25,6 +25,7 @@ cols = ["docno", "doclen", "text"]
 rows = []
 data_source = ['LATIMES', 'FT']
 data_path = "./ATiML_TREC_4_5_Dataset/TREC_4_5/"
+# data_path="./"
 
 if mode == 'kp':
     keyphrase_mode = true
@@ -64,13 +65,15 @@ def process_file(file_path):
                 f.close()
             soup = BeautifulSoup(doc_string, "lxml")
             doc_list = soup.select('DOC')
-            print(len(doc_list))
             for doc in doc_list:
-                if len(doc.findAll("text"))== 0:
+                if len(doc.findAll("text"))==0:
                     continue
                 text = preprocessing_pipeline(doc.find("text").text)
                 docno = doc.find("docno").text
                 doclen = len(text.split())
+                if doclen==0:
+                    print(doc.find("docno").text + '-->', len(doc.find("text").text.split()))
+                    continue
                 rows.append({"docno": docno, "text": text, "doclen": doclen})
         except Exception as e:
             pass
@@ -92,4 +95,9 @@ for news_src in data_source:
     get_nested_path(path)
 
 df = pd.DataFrame(rows, columns=cols)
+
+if os.path.exists("./"+out_file_name):
+    os.remove("./"+out_file_name)
+    print("Old data cleaned")
+
 df.to_csv(out_file_name, index=False)

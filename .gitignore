@@ -133,6 +133,8 @@ ATiML_TREC_4_5_Dataset/
 
 #output
 news_articles.csv
+data.csv
+keyphrase_data.csv
 
 # Vim swap files
 *.swp

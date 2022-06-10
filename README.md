@@ -1,5 +1,10 @@
 # constrained-clustering
 
+Dependencies: 
+
+1. scikit-learn
+
+
 Pre-processing steps: TREC 4 5 dataset:
 
 1. Make sure the TREC_4_5 dataset is in the base folder
@@ -22,3 +27,4 @@ Constraints:
 1. Sentiments derived from news articles. Pairwise clustering of positive articles,
 
 **Keyphrasification**: Please check out the comments in `keyphrase_extraction.py` before using the routine
+
