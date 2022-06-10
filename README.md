@@ -1,4 +1,4 @@
-# constrained-clustering
+# Introducing constraints into k-means clustering and evaluating with TREC 4 5 data set
 
 Step 1: Install Dependencies: 
 
