@@ -1,5 +1,15 @@
-#imports data from source
-import numpy as np
+#This major ML Ops line, assumes features have benn extracted
+#constraints are applied on run-time while clustering
+import sys, getopt
+
+argv = sys.argv[1:]
+try:
+    opts, argv = getopt.getopt(argv, '', ["ppline=", "mode="])
+    for opt,val in opts:
+        if opt in ("--mode"):
+            mode = val
+except getopt.error as err:
+	print (str(err))
 
 #print basic stats on data
 print(f"# samples: {n_samples}; # features {n_features}")
