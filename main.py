@@ -2,14 +2,21 @@
 #constraints are applied on run-time while clustering
 import sys, getopt
 
+from sklearn import pipeline
+
 argv = sys.argv[1:]
 try:
-    opts, argv = getopt.getopt(argv, '', ["ppline=", "mode="])
+    opts, argv = getopt.getopt(argv, '', ["ppline=", "knn=", "doc_id"])
     for opt,val in opts:
-        if opt in ("--mode"):
-            mode = val
+        if opt in ("--ppline"):
+            ppline = val
+        if opt in ("--knn"):
+            n_neighbors = val
+        if opt in ("--doc_id"):
+            doc_id = val
 except getopt.error as err:
 	print (str(err))
+
 
 #print basic stats on data
 print(f"# samples: {n_samples}; # features {n_features}")
