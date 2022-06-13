@@ -2,11 +2,9 @@
 #constraints are applied on run-time while clustering
 import sys, getopt
 
-from sklearn import pipeline
-
 argv = sys.argv[1:]
 try:
-    opts, argv = getopt.getopt(argv, '', ["ppline=", "knn=", "doc_id"])
+    opts, argv = getopt.getopt(argv, '', ["ppline=", "knn=", "doc_id", "n_clus"])
     for opt,val in opts:
         if opt in ("--ppline"):
             ppline = val
@@ -14,9 +12,10 @@ try:
             n_neighbors = val
         if opt in ("--doc_id"):
             doc_id = val
+        if opt in ("n_clus"):
+            n_clus = val
 except getopt.error as err:
 	print (str(err))
-
 
 #print basic stats on data
 print(f"# samples: {n_samples}; # features {n_features}")
