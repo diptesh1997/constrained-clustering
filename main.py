@@ -20,7 +20,6 @@ except getopt.error as err:
 #print basic stats on data
 print(f"# samples: {n_samples}; # features {n_features}")
 
-
 #word2vec pipeline
 #vectorized_docs = vectorize(df['text_list'], model=model)
 # %%

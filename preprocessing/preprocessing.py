@@ -24,7 +24,7 @@ keyphrase_mode = false
 cols = ["docno", "doclen", "text"]
 rows = []
 data_source = ['LATIMES', 'FT']
-data_path = "./ATiML_TREC_4_5_Dataset/TREC_4_5/"
+data_path = "../ATiML_TREC_4_5_Dataset/TREC_4_5/"
 # data_path="./"
 
 if mode == 'kp':
