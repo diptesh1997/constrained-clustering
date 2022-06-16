@@ -2,23 +2,59 @@
 #constraints are applied on run-time while clustering
 import sys, getopt
 
-argv = sys.argv[1:]
-try:
-    opts, argv = getopt.getopt(argv, '', ["ppline=", "knn=", "doc_id", "n_clus"])
-    for opt,val in opts:
-        if opt in ("--ppline"):
-            ppline = val
-        if opt in ("--knn"):
-            n_neighbors = val
-        if opt in ("--doc_id"):
-            doc_id = val
-        if opt in ("n_clus"):
-            n_clus = val
-except getopt.error as err:
-	print (str(err))
+import pandas as pd
 
-#print basic stats on data
-print(f"# samples: {n_samples}; # features {n_features}")
+from neighbors.neighbours_provider import get_neighbours
+
+n = len(sys.argv)
+try:
+    ppline=int(sys.argv[1]) #If ppline=1 => Tfidif+sentiment ,If ppline=2 => Word2vec+LDA+sentiment
+
+    neighbours=int(sys.argv[2]) #number of neighbours
+    query_doc=sys.argv[3]  #query document id
+    n_clusters=int(sys.argv[4]) #number of clusters
+    if(ppline==1):
+            print("Selected pipeline => "+"Tf_IDF+sentiment")
+            doc_path="./feature_extraction/tf_idf_features+sentiment.csv"
+    elif (ppline == 2):
+            print("Selected pipeline => " + "Word2vec+LDA+sentiment")
+            doc_path="./feature_extraction/word2vec_LDA_sentiment.csv"
+
+    else:
+        raise Exception("Invalid choice for pipeline")
+    print("number of neighbours "+str(neighbours))
+    print("Query document " + query_doc)
+    print("Number of Clusters " +str(n_clusters ))
+    dataframe=pd.read_csv(doc_path,index_col='docno')
+    query_point=dataframe[dataframe.index == query_doc].drop("class",axis=1)
+
+    data=get_neighbours(dataframe.drop("class",axis=1),query_point,neighbours)
+    final_data = pd.merge(data, dataframe["class"], on="docno")
+
+    print(final_data[["class",'dist']])
+except Exception as e:
+    print(e)
+
+#Command to run-> python main.py 1 500 'ABC' 400
+
+
+# try:
+#     opts, argv = getopt.getopt(argv, '', ["ppline=", "knn=", "doc_id", "n_clus"])
+#     for opt,val in opts:
+#         if opt in ("--ppline"):
+#             ppline = val
+#         if opt in ("--knn"):
+#             n_neighbors = val
+#         if opt in ("--doc_id"):
+#             doc_id = val
+#         if opt in ("n_clus"):
+#             n_clus = val
+# except getopt.error as err:
+# 	print (str(err))
+#
+# #print basic stats on data
+# print(f"# samples: {n_samples}; # features {n_features}")
+
 
 #word2vec pipeline
 #vectorized_docs = vectorize(df['text_list'], model=model)
