@@ -1,11 +1,10 @@
 #This major ML Ops line, assumes features have benn extracted
 #constraints are applied on run-time while clustering
 import sys, getopt
-
 import pandas as pd
 
 from neighbors.neighbours_provider import get_neighbours
-
+from clustering import
 n = len(sys.argv)
 try:
     ppline=int(sys.argv[1]) #If ppline=1 => Tfidif+sentiment ,If ppline=2 => Word2vec+LDA+sentiment
@@ -32,6 +31,8 @@ try:
     final_data = pd.merge(data, dataframe["class"], on="docno")
 
     print(final_data[["class",'dist']])
+
+
 except Exception as e:
     print(e)
 
