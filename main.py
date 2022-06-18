@@ -1,10 +1,12 @@
 #This major ML Ops line, assumes features have benn extracted
 #constraints are applied on run-time while clustering
 import sys, getopt
+import traceback
+
 import pandas as pd
 
+from clustering.test_again import k_means
 from neighbors.neighbours_provider import get_neighbours
-from clustering.clustering import kmeans 
 n = len(sys.argv)
 try:
     ppline=int(sys.argv[1]) #If ppline=1 => Tfidif+sentiment ,If ppline=2 => Word2vec+LDA+sentiment
@@ -14,10 +16,10 @@ try:
     n_clusters=int(sys.argv[4]) #number of clusters
     if(ppline==1):
             print("Selected pipeline => "+"Tf_IDF+sentiment")
-            doc_path="./feature_extraction/tf_idf_features+sentiment.csv"
+            doc_path="../data/tf_idf_features+sentiment.csv"
     elif (ppline == 2):
             print("Selected pipeline => " + "Word2vec+LDA+sentiment")
-            doc_path="./feature_extraction/word2vec_LDA_sentiment.csv"
+            doc_path="../data/word2vec_LDA_sentiment.csv"
 
     else:
         raise Exception("Invalid choice for pipeline")
@@ -29,12 +31,18 @@ try:
 
     data=get_neighbours(dataframe.drop("class",axis=1),query_point,neighbours)
     final_data = pd.merge(data, dataframe["class"], on="docno")
-    print(final_data[["class",'dist']])
+    print(final_data.columns)
+    final_data=final_data.drop('dist',axis=1)
+    print(final_data.columns)
+    print(final_data.shape)
+    pos_doc_df = final_data[final_data["class"] == 1]
 
-    kmeans(n_clusters, final_data, [], -0.001, 0.1)
+    neg_doc_df = final_data[final_data["class"] == -1]
+    neu_doc_df = final_data[final_data["class"] == 0]
+    k_means(n_clusters, final_data, [], pos_doc_df, neg_doc_df, neu_doc_df, -0.02, 0.1)
+
 except Exception as e:
-    print(e)
-
+    traceback.print_exc(e)
 #Command to run-> python main.py 1 500 'ABC' 400
 
 
