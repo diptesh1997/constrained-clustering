@@ -6,7 +6,6 @@
 #penalty weight for must_links
 #penalty weight for cannot_links
 
-
 #selecting initial cluster centres
 
 #cost function that should be minimized
@@ -133,8 +132,8 @@ def update_centroids(num_clusters, data):
 
 # penalize point for not being assigned to must link peers and being assigned to cannot link peers:
 def penalize(point, assumed_pt_cluster, must_link_penalty, cannot_link_penalty):
-    postive_sentiment_set = 
-    negative_sentiment_set =
+    postive_sentiment_set = point
+    negative_sentiment_set = point
     penalty = 0.0
 
     #return zero penalty for neutral sentiment documents

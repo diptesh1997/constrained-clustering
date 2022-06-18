@@ -48,7 +48,7 @@ Heuristics & Hyperparameter selection
         1. (Preprocessing)
         2. Feature extraction (Topic modelling + Keyphrases): Everyone : 17th Jun
     b) Constraints: Sentiments as Constraints: Visakh and Diptesh
-    c)  K-means Objective: Harshit & pentality
+    c) K-means Objective: Harshit & pentality
     d) Evaluation: Silhoutte score and jackard coefficient:
     e) Explainability:
     f) Visualizations:
