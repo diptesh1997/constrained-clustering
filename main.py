@@ -31,42 +31,29 @@ try:
 
     data=get_neighbours(dataframe.drop("class",axis=1),query_point,neighbours)
     final_data = pd.merge(data, dataframe["class"], on="docno")
-    print(final_data.columns)
     final_data=final_data.drop('dist',axis=1)
-    print(final_data.columns)
-    print(final_data.shape)
     pos_doc_df = final_data[final_data["class"] == 1]
 
     neg_doc_df = final_data[final_data["class"] == -1]
     neu_doc_df = final_data[final_data["class"] == 0]
-    k_means(n_clusters, final_data, [], pos_doc_df, neg_doc_df, neu_doc_df, -0.02, 0.1)
+    result=k_means(n_clusters, final_data, [], pos_doc_df, neg_doc_df, neu_doc_df, -0.02, 0.1)
+    result['docno']=final_data.index
+    result=result.set_index('docno')
+    from datetime import datetime
+
+    now = datetime.now()
+
+    print("now =", now)
+
+    dt_string = now.strftime("%d.%m.%Y %H:%M:%S")
+    print("date and time =", dt_string)
+    filename='./result '+str(dt_string)+'.csv'
+    print(filename)
+    result.to_csv(filename,index=True)
 
 except Exception as e:
     traceback.print_exc(e)
-#Command to run-> python main.py 1 500 'ABC' 400
 
-
-# try:
-#     opts, argv = getopt.getopt(argv, '', ["ppline=", "knn=", "doc_id", "n_clus"])
-#     for opt,val in opts:
-#         if opt in ("--ppline"):
-#             ppline = val
-#         if opt in ("--knn"):
-#             n_neighbors = val
-#         if opt in ("--doc_id"):
-#             doc_id = val
-#         if opt in ("n_clus"):
-#             n_clus = val
-# except getopt.error as err:
-# 	print (str(err))
-#
-# #print basic stats on data
-# print(f"# samples: {n_samples}; # features {n_features}")
-
-
-#word2vec pipeline
-#vectorized_docs = vectorize(df['text_list'], model=model)
-# %%
 # Evaluation
 # -------------------------------
 
