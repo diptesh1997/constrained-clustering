@@ -1,23 +1,9 @@
-#k-means implementation
+import math
+import numpy as np
+from scipy.spatial import distance
+from sklearn.utils import shuffle
 
-#hyperparameters
-
-#k = no of clusters
-#penalty weight for must_links
-#penalty weight for cannot_links
-
-#selecting initial cluster centres
-
-#cost function that should be minimized
-
-# calculating the cost from point to each of the cluster centres
-# Assignment to the cluster with the least weight
-# constraints defined as the sum of costs
-
-#constraint filtering: post k-means
-
-#constraints: must link [1,3,5, 4,2,5]
-# k_means(5, df, [], must_link, cannot_link)
+#K-means
 # assign initial centres
 # assigns clusters to -1
 # calculates cluster assignment
@@ -27,13 +13,7 @@
 #   calculate_eucledian_dist
 #   penalize constraints
 #   new cluster assignment
-
-import math
-import numpy as np
-from scipy.spatial import distance
-from sklearn.utils import shuffle
-
-def k_means(num_clusters, df, init_centres, must_link_penalty, cannot_link_penalty):
+def k_means(num_clusters, df, init_centres, pos_docs, neg_docs, neu_docs, must_link_penalty, cannot_link_penalty):
 
     #returns a list of k initial centre points for cluster initialization
     def choose_initial_centres(num_clusters, df):
@@ -50,113 +30,92 @@ def k_means(num_clusters, df, init_centres, must_link_penalty, cannot_link_penal
 
     #choose centre points from data if not already given
     if(len(init_centres)!=num_clusters):
-        centres = choose_initial_centres(num_clusters, df)
-
+        num_centres = num_clusters/3
+        rem_centres = num_clusters%3
+        pos_centers = choose_initial_centres(num_centres+rem_centres, pos_docs)
+        neg_centers = choose_initial_centres(num_centres, neg_docs)
+        neu_centres = choose_initial_centres(num_centres, neu_docs)
+        centres = centres.append(pos_centers, neg_centers, neu_centres)
+        print(centres)
+        
     #determine distance of points from the centres and assign clusters
     # df = shuffle(df)
     data = df.to_numpy()
+    col_count = len(data[:][0])
     centroids = centres.to_numpy()
     data = np.hstack([data, np.zeros((len(data),1)), np.ones((len(data),1))])
     #compute the centroids till the cluster assignment remains the same
-    fit(data, centroids, num_clusters, must_link_penalty, cannot_link_penalty)
-
-    #print the new csv file after converging
+    fit(data, col_count, centroids, num_clusters, must_link_penalty, cannot_link_penalty)
 
 #takes in a dataframe and a center vector and outputs a series with distance values of all points from the vector
-def fit(data, centroids, num_clusters, must_link_penalty, cannot_link_penalty):
+#last 2 columns reserved for cluster comparision (current cluster and prev cluster)
+def fit(data, col_count, centroids, num_clusters, must_link_penalty, cannot_link_penalty):
     iter = 0
-    print(centroids)
-    while(not np.array_equiv(data[:,5],data[:,4])):
+    pos_docs_loc, neg_docs_loc, neu_docs_loc = extract_sentiment_index()
+    while(not np.array_equiv(data[:,col_count+1],data[:,col_count])):
         if(iter!=0):
-            data[:,4] = data[:,5]
-            centroids = update_centroids(num_clusters, data)
+            data[:,col_count] = data[:,col_count+1]
+            data[:,col_count+1] = -1
+            centroids = update_centroids(num_clusters, data[:,:col_count],col_count)
         iter+=1
         dist = []
         for point in data:
             dist_val = []
             for index, center in centroids:
-                eucledian_dist = distance.euclidean(point[0:4], center)
-                constraint_penalty = penalize(point, index,  )
-                dist_val.append(eucledian_dist+constraint_penalty)
+                eucledian_dist = distance.euclidean(point[:col_count-1], center)
+                penalty_dist = penalize(point, col_count, index, pos_docs_loc, neg_docs_loc, must_link_penalty, cannot_link_penalty)
+                dist_val.append(eucledian_dist+penalty_dist)
             cluster_val = dist_val.index(min(dist_val))
             dist.append(cluster_val)
-        data[:,5] = dist
-    print(data)
+        data[:,col_count+1] = dist
     print('iterations--->',iter)
 
-    #handles case where no point is assigned to a cluster center
-    #takes in all data points assigned to individual clusters and asks for clustering again with new centroids
-def update_centroids(num_clusters, data):
+
+# penalize point for not being assigned to must link peers and being assigned to cannot link peers:
+def penalize(point, col_count, assumed_pt_cluster, pos_docs_loc, neg_docs_loc, must_link_penalty, cannot_link_penalty):
+    
+    penalty = 0.0
+
+    #return zero penalty for neutral sentiment documents
+    if point[col_count-1] == 0:
+        return penalty
+        
+    elif point[col_count-1] == 1:
+        must_link_set = pos_docs_loc
+        cannot_link_set = neg_docs_loc
+    
+    else:
+        must_link_set = neg_docs_loc
+        cannot_link_set = pos_docs_loc
+    
+    #return negative penalty for neutral sentiment documents
+    for ml_pt in must_link_set:
+        if np.not_equal(data[ml_pt],point) and data[ml_pt][col_count+1] != -1 and assumed_pt_cluster != data[ml_pt][col_count+1]:
+            penalty += must_link_penalty
+
+    #return positive penalty for  sentiment documents
+    for cl_pt in cannot_link_set:
+        if np.not_equal(data[cl_pt],point) and data[cl_pt][col_count+1] != -1 and assumed_pt_cluster == data[cl_pt][col_count+1]:
+            penalty += cannot_link_penalty
+
+    return penalty
+
+#handles case where no point is assigned to a cluster center
+def update_centroids(num_clusters, data, col_count):
     #num_columns = len(df.shape[1])
     #make this dynamic: take as many columns as are there in the dataframe
     # clusters_with_no_pts = df[:4].nunique() - num_clusters
     #choose random samples as cluster centres
     # if (clusters_with_no_pts>0):
     #     centers = df.sample(n=clusters_with_no_pts)
-
     #find mean by cluster value and call eucledian distance again
+    
     centroids = []
-    c0 = data[data[:,4]== 0.0]
-    c1 = data[data[:,4]== 1.0]
-    c2 = data[data[:,4]== 2.0]
-
-    center_0 = np.mean(c0[:,0:4], axis=0)
-    center_1 = np.mean(c1[:,0:4], axis=0)
-    center_2 = np.mean(c2[:,0:4], axis=0)
-
-    print('center_0-->',center_0)
-    print('center_1-->',center_1)
-    print('center_2-->',center_2)
-
-    # for i in range(num_clusters):
-    #     centroids = center_0
-
-    centroids = [center_0, center_1, center_2]
+    data_per_cluster = []
+    for clus_no in range(num_clusters):
+        data_per_cluster.append(data[data[:,col_count]== float(clus_no)])
+    
+    for cluster_data in range(len(data_per_cluster)):
+        centroids.append(np.mean(cluster_data[:,0:col_count-1], axis=0))
+    
     return centroids
-
-    #if using dataframes, make binary masks
-    # mask_list = []
-    # for mask_no in range(num_clusters):
-    #     mask_list.append(df['cluster'] == mask_no)
-
-    # df_with_centroids = [] 
-    # for mask in mask_list:
-    #     df_with_centroids.append(df[mask])
-
-    # centers_df = pd.DataFrame([])
-    # for dataframe in df_with_centroids:
-    #     centers_df.concat(dataframe.mean(axis=1))
-
-    # print(centers_df)
-    # return centers_df
-
-# penalize point for not being assigned to must link peers and being assigned to cannot link peers:
-def penalize(point, assumed_pt_cluster, must_link_penalty, cannot_link_penalty):
-    postive_sentiment_set = point
-    negative_sentiment_set = point
-    penalty = 0.0
-
-    #return zero penalty for neutral sentiment documents
-    if point['class'] == 0:
-        return penalty
-        
-    elif point['class'] == 1:
-        must_link_set = postive_sentiment_set
-        cannot_link_set = negative_sentiment_set
-    
-    else:
-        must_link_set = negative_sentiment_set
-        cannot_link_set = postive_sentiment_set
-    
-    #return negative penalty for neutral sentiment documents
-    for ml_pt in must_link_set:
-        if ml_pt !=point and ml_pt[4]!= -1 and assumed_pt_cluster != ml_pt[4]:
-            penalty += must_link_penalty
-
-    #return positive penalty for  sentiment documents
-    for cl_pt in cannot_link_set:
-        if cl_pt !=point and cl_pt[4] != -1 and assumed_pt_cluster == cl_pt[4]:
-            penalty += cannot_link_penalty
-
-    return penalty
-
