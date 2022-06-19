@@ -4,34 +4,40 @@ from gensim import corpora
 from gensim import models
 import numpy as np
 
-data = pd.read_csv(r'../../Data/data-2.csv')
-data['tokens_text'] = data['text'].str.split(' ')
-tokens = data['tokens_text'].tolist()
-bigram_model = Phrases(tokens)
-trigram_model = Phrases(bigram_model[tokens], min_count=1)
-tokens = list(trigram_model[bigram_model[tokens]])
-dictionary_LDA = corpora.Dictionary(tokens)
-dictionary_LDA.filter_extremes(no_below=3)
-corpus = [dictionary_LDA.doc2bow(tok) for tok in tokens]
+# data = pd.read_csv(r'../../Data/data-2.csv')
+data = pd.read_csv(r'C:/Users/Shimony/Desktop/SHIMO/MS DE/SemII/ATiML/ATiML_Assignments/Project/ATiML_data.csv')
+# data = data.iloc[:20000]
+data['tokens'] = data['text'].str.split(' ')
+tokens = data['tokens'].tolist()
+bigram = Phrases(tokens)
+trigram = Phrases(bigram[tokens], min_count=1)
+tokens = list(trigram[bigram[tokens]])
+dict_LDA = corpora.Dictionary(tokens)
+dict_LDA.filter_extremes(no_below=3)
+corpus = [dict_LDA.doc2bow(token) for token in tokens]
 np.random.seed(123456)
 num_topics = 20
-lda_model = models.LdaModel(corpus, num_topics=num_topics,
-                            id2word=dictionary_LDA,
-                            passes=4, alpha=[0.01] * num_topics,
-                            eta=[0.01] * len(dictionary_LDA.keys()))
+lda = models.LdaModel(corpus, num_topics=num_topics,
+                      id2word=dict_LDA,
+                      passes=4, alpha=[0.01] * num_topics,
+                      eta=[0.01] * len(dict_LDA.keys()))
 
-topics = [lda_model[corpus[i]] for i in range(len(data))]
-
-
-def topics_document_to_dataframe(topics_document, num_topics):
-    res = pd.DataFrame(columns=range(num_topics))
-    for topic_weight in topics_document:
-        res.loc[0, topic_weight[0]] = topic_weight[1]
-    return res
+topics = [lda[corpus[i]] for i in range(len(data))]
 
 
-# Final LDA feature extraction matrix with documents as rows and 10 topics as column (can change count of topics by num_topics variable value)
-document_topic = pd.concat([topics_document_to_dataframe(topics_document, num_topics=num_topics) for topics_document in topics]).reset_index(drop=True).fillna(0)
-document_topic['docno']=data['docno']
+def topics_document_to_dataframe(topics_doc, num_topics):
+    result = pd.DataFrame(columns=range(num_topics))
+    for topic_weight in topics_doc:
+        result.loc[0, topic_weight[0]] = topic_weight[1]
+    return result
 
-document_topic.to_csv("LDA_features.csv",index=False)
+
+# LDA feature extraction matrix with docs as rows and 20 topics as column
+doc_topic_matrix = pd.concat(
+    [topics_document_to_dataframe(topics_doc, num_topics=num_topics) for topics_doc in topics]).reset_index(
+    drop=True).fillna(0)
+doc_topic_matrix['docno'] = data['docno']
+
+# doc_topic_matrix.to_csv("LDA_features.csv", index=False)
+
+print(doc_topic_matrix.head())
