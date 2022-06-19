@@ -10,13 +10,13 @@ from clustering.clustering import k_means
 from neighbors.neighbours_provider import get_neighbours
 n = len(sys.argv)
 try:
-    ppline=2 #If ppline=1 => Tfidif+sentiment ,If ppline=2 => Word2vec+LDA+sentiment
+    ppline=int(sys.argv[1]) #If ppline=1 => Tfidif+sentiment ,If ppline=2 => Word2vec+LDA+sentiment
 
-    neighbours = 25 # number of neighbours
-    query_doc = 'FT911-3495' # query document id
-    n_clusters = 6  # number of clusters
-    must_link = -0.02
-    cannot_link = 0.1
+    neighbours = int(sys.argv[2])  # number of neighbours
+    query_doc = sys.argv[3]  # query document id
+    n_clusters = int(sys.argv[4])  # number of clusters
+    must_link = float(sys.argv[5])
+    cannot_link = float(sys.argv[6])
     if(ppline==1):
             print("Selected pipeline => "+"Tf_IDF+sentiment")
             doc_path="../data/tf_idf_features+sentiment.csv"
