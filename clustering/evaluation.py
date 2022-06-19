@@ -58,14 +58,15 @@ try:
     final_data = pd.merge(data, dataframe["class"], on="docno")
 
     silhouette_scores = []
-    for k in range(2, 11):
+    for k in range(3, 11):
         result = pd.DataFrame(
             k_means(k, final_data, final_keyphrase, [], pos_doc_df, neg_doc_df, neu_doc_df, must_link, cannot_link,
                     keyphrase_penalty))
+        print(result.head())
         if (ppline == 1):
             DF = result.iloc[:, 1:101]
-            df_labels = result.iloc[:, 103]
-        if (ppline == 2):
+            df_labels = result.iloc[:, 102]
+        elif (ppline == 2):
             DF = result.iloc[:, 1:101]          #please update as per the result set
             df_labels = result.iloc[:, 103]     #please update as per the result set
 
