@@ -4,6 +4,7 @@ import sys, getopt
 import traceback
 
 import pandas as pd
+import numpy as np
 
 from clustering.test_again import k_means
 from neighbors.neighbours_provider import get_neighbours
@@ -38,7 +39,8 @@ try:
     neu_doc_df = final_data[final_data["class"] == 0]
     keyphrase_df = pd.read_csv("../data/keyphrase_docno_added.csv", index_col='docno')
 
-    result=k_means(n_clusters, final_data, keyphrase_df, [], pos_doc_df, neg_doc_df, neu_doc_df, -0.02, 0.1)
+    keyphrase_penalty = np.array([10, 4])
+    result = k_means(n_clusters, final_data, keyphrase_df, [], pos_doc_df, neg_doc_df, neu_doc_df, -0.02, 0.1, keyphrase_penalty)
     result['docno']=final_data.index
     result=result.set_index('docno')
     from datetime import datetime

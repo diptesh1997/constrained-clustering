@@ -2,7 +2,7 @@ import math
 import numpy as np
 from scipy.spatial import distance
 
-def k_means(num_clusters, df, keyphrase_df, init_centres, pos_docs, neg_docs, neu_docs, must_link_penalty, cannot_link_penalty):
+def k_means(num_clusters, df, keyphrase_df, init_centres, pos_docs, neg_docs, neu_docs, must_link_penalty, cannot_link_penalty, keyphrase_penalty):
 
     #returns a list of k initial centre points for cluster initialization
     def choose_initial_centres(num_clusters, df):
@@ -28,7 +28,7 @@ def k_means(num_clusters, df, keyphrase_df, init_centres, pos_docs, neg_docs, ne
     centroids = centres[:,:col_count-1]
     data = np.hstack([data, np.zeros((len(data),1)), np.ones((len(data),1))])
     #compute the centroids till the cluster assignment remains the same
-    fit(data, df, keyphrase_df, col_count, pos_docs, neg_docs, neu_docs, centroids, num_clusters, must_link_penalty, cannot_link_penalty)
+    fit(data, df, keyphrase_df, col_count, pos_docs, neg_docs, neu_docs, centroids, num_clusters, must_link_penalty, cannot_link_penalty, keyphrase_penalty)
 
 def extract_sentiment_index(df, pos_docs, neg_docs,  neu_docs):
     pos_docs_loc = df.index.get_indexer(pos_docs.index.to_list())
@@ -56,7 +56,7 @@ def fit(data, df, keyphrase_df, col_count, pos_docs, neg_docs, neu_docs, centroi
             for index, center in enumerate(centroids):
                 eucledian_dist = distance.euclidean(point[:col_count-1], center)
                 penalty_dist = penalize(point, data, col_count, index, pos_docs_loc, neg_docs_loc, must_link_penalty, cannot_link_penalty)
-                penalty_keyphrase = penalize_keyphrase(df, data, keyphrase_df, col_count, row_index, index, np.array([0., 0.1]))
+                penalty_keyphrase = penalize_keyphrase(df, data, keyphrase_df, col_count, row_index, index, keyphrase_penalty)
                 dist_val.append(eucledian_dist+penalty_dist+penalty_keyphrase)
             cluster_val = dist_val.index(min(dist_val))
             data[row_index,col_count+1] = cluster_val
