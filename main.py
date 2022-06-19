@@ -6,7 +6,7 @@ import traceback
 import pandas as pd
 import numpy as np
 
-from clustering.test_again import k_means
+from clustering.clustering import k_means
 from neighbors.neighbours_provider import get_neighbours
 n = len(sys.argv)
 try:
@@ -15,6 +15,8 @@ try:
     neighbours=int(sys.argv[2]) #number of neighbours
     query_doc=sys.argv[3]  #query document id
     n_clusters=int(sys.argv[4]) #number of clusters
+    must_link=float(sys.argv[5])
+    cannot_link=float(sys.argv[6])
     if(ppline==1):
             print("Selected pipeline => "+"Tf_IDF+sentiment")
             doc_path="../data/tf_idf_features+sentiment.csv"
@@ -27,20 +29,30 @@ try:
     print("number of neighbours "+str(neighbours))
     print("Query document " + query_doc)
     print("Number of Clusters " +str(n_clusters ))
+    print("Must link penalty " +str(must_link ))
+    print("Cannot link penalty  " +str(cannot_link ))
+
     dataframe=pd.read_csv(doc_path,index_col='docno')
     query_point=dataframe[dataframe.index == query_doc].drop("class",axis=1)
 
+#Get the neighbours
     data=get_neighbours(dataframe.drop("class",axis=1),query_point,neighbours)
+#Merge sentimnets value
     final_data = pd.merge(data, dataframe["class"], on="docno")
+#Drop distance column
     final_data=final_data.drop('dist',axis=1)
     pos_doc_df = final_data[final_data["class"] == 1]
-
     neg_doc_df = final_data[final_data["class"] == -1]
     neu_doc_df = final_data[final_data["class"] == 0]
     keyphrase_df = pd.read_csv("../data/keyphrase_docno_added.csv", index_col='docno')
 
+    final_keyphrase=keyphrase_df[keyphrase_df.index.isin(final_data.index)]
+    final_keyphrase=final_keyphrase.reindex(final_data.index)
+
+    print(final_keyphrase.index,final_data.index)
     keyphrase_penalty = np.array([10, 4])
-    result = k_means(n_clusters, final_data, keyphrase_df, [], pos_doc_df, neg_doc_df, neu_doc_df, -0.02, 0.1, keyphrase_penalty)
+    final_data = pd.merge(data, dataframe["class"], on="docno")
+    result = pd.DataFrame(k_means(n_clusters, final_data, final_keyphrase, [], pos_doc_df, neg_doc_df, neu_doc_df, must_link,cannot_link, keyphrase_penalty))
     result['docno']=final_data.index
     result=result.set_index('docno')
     from datetime import datetime
