@@ -55,12 +55,15 @@ def fit(data, df, keyphrase_df, col_count, pos_docs, neg_docs, neu_docs, centroi
         for row_index, point in enumerate(data):
             dist_val = []
             for index, center in enumerate(centroids):
-                eucledian_dist = distance.euclidean(point[:col_count - 1], center)
-                penalty_dist = penalize(point, data, col_count, index, pos_docs_loc, neg_docs_loc, must_link_penalty,
-                                        cannot_link_penalty)
-                penalty_keyphrase = penalize_keyphrase(df, data, keyphrase_df, col_count, row_index, index,
-                                                       keyphrase_penalty)
-                dist_val.append(eucledian_dist + penalty_dist + penalty_keyphrase)
+                try:
+                    eucledian_dist = distance.euclidean(point[:col_count - 1], center)
+                    penalty_dist = penalize(point, data, col_count, index, pos_docs_loc, neg_docs_loc, must_link_penalty,
+                                            cannot_link_penalty)
+                    penalty_keyphrase = penalize_keyphrase(df, data, keyphrase_df, col_count, row_index, index,
+                                                           keyphrase_penalty)
+                    dist_val.append(eucledian_dist + penalty_dist + penalty_keyphrase)
+                except Exception as e:
+                    eucledian_dist = distance.euclidean(point[:col_count - 1], center)
             cluster_val = dist_val.index(min(dist_val))
             data[row_index, col_count + 1] = cluster_val
         print('iteration count--->', iter)
@@ -144,7 +147,7 @@ def update_centroids(num_clusters, data, col_count):
         no_pt_clusters = num_clusters - len(centroids)
         if (no_pt_clusters > 0):
             indices = np.random.choice(data.shape[0], no_pt_clusters, replace=False)
-            centroids.append(data[indices, :col_count - 1])
+            centroids = np.concatenate((centroids,data[indices, :col_count - 1]))
 
         return centroids
 
