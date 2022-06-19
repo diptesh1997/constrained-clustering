@@ -36,7 +36,9 @@ try:
 
     neg_doc_df = final_data[final_data["class"] == -1]
     neu_doc_df = final_data[final_data["class"] == 0]
-    result=k_means(n_clusters, final_data, [], pos_doc_df, neg_doc_df, neu_doc_df, -0.02, 0.1)
+    keyphrase_df = pd.read_csv("../data/keyphrase_docno_added.csv", index_col='docno')
+
+    result=k_means(n_clusters, final_data, keyphrase_df, [], pos_doc_df, neg_doc_df, neu_doc_df, -0.02, 0.1)
     result['docno']=final_data.index
     result=result.set_index('docno')
     from datetime import datetime
