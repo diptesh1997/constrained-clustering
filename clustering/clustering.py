@@ -2,7 +2,7 @@ import math
 import numpy as np
 from scipy.spatial import distance
 
-def k_means(num_clusters, df, init_centres, pos_docs, neg_docs, neu_docs, must_link_penalty, cannot_link_penalty):
+def k_means(num_clusters, df, keyphrase_df, init_centres, pos_docs, neg_docs, neu_docs, must_link_penalty, cannot_link_penalty):
 
     #returns a list of k initial centre points for cluster initialization
     def choose_initial_centres(num_clusters, df):
@@ -28,7 +28,7 @@ def k_means(num_clusters, df, init_centres, pos_docs, neg_docs, neu_docs, must_l
     centroids = centres[:,:col_count-1]
     data = np.hstack([data, np.zeros((len(data),1)), np.ones((len(data),1))])
     #compute the centroids till the cluster assignment remains the same
-    fit(data, df, col_count, pos_docs, neg_docs, neu_docs, centroids, num_clusters, must_link_penalty, cannot_link_penalty)
+    fit(data, df, keyphrase_df, col_count, pos_docs, neg_docs, neu_docs, centroids, num_clusters, must_link_penalty, cannot_link_penalty)
 
 def extract_sentiment_index(df, pos_docs, neg_docs,  neu_docs):
     pos_docs_loc = df.index.get_indexer(pos_docs.index.to_list())
@@ -38,7 +38,7 @@ def extract_sentiment_index(df, pos_docs, neg_docs,  neu_docs):
 
 #takes in a dataframe and a center vector and outputs a series with distance values of all points from the vector
 #last 2 columns reserved for cluster comparision (current cluster and prev cluster)
-def fit(data, df, col_count, pos_docs, neg_docs, neu_docs, centroids, num_clusters, must_link_penalty, cannot_link_penalty):
+def fit(data, df, keyphrase_df, col_count, pos_docs, neg_docs, neu_docs, centroids, num_clusters, must_link_penalty, cannot_link_penalty):
     iter = 0
     pos_docs_loc, neg_docs_loc, neu_docs_loc = extract_sentiment_index(df, pos_docs, neg_docs, neu_docs)
     # print(data[:,col_count+1])
@@ -56,7 +56,8 @@ def fit(data, df, col_count, pos_docs, neg_docs, neu_docs, centroids, num_cluste
             for index, center in enumerate(centroids):
                 eucledian_dist = distance.euclidean(point[:col_count-1], center)
                 penalty_dist = penalize(point, data, col_count, index, pos_docs_loc, neg_docs_loc, must_link_penalty, cannot_link_penalty)
-                dist_val.append(eucledian_dist+penalty_dist)
+                penalty_keyphrase = penalize_keyphrase(df, data, keyphrase_df, col_count, row_index, index, np.array([0., 0.1]))
+                dist_val.append(eucledian_dist+penalty_dist+penalty_keyphrase)
             cluster_val = dist_val.index(min(dist_val))
             data[row_index,col_count+1] = cluster_val
         print('iteration count--->',iter)
@@ -83,15 +84,46 @@ def penalize(point, data, col_count, assumed_pt_cluster, pos_docs_loc, neg_docs_
     #return negative penalty for neutral sentiment documents
     for ml_pt in must_link_set:
         if np.any(np.not_equal(data[ml_pt][:col_count-1],point[:col_count-1])) and data[ml_pt][col_count+1] != -1 and assumed_pt_cluster == data[ml_pt][col_count+1]:
-            print("here for ml penalty")
+            # print("here for ml penalty")
             penalty += must_link_penalty
 
     #return positive penalty for  sentiment documents
     for cl_pt in cannot_link_set:
         if np.any(np.not_equal(data[cl_pt][:col_count-1],point[:col_count-1])) and data[cl_pt][col_count+1] != -1 and assumed_pt_cluster == data[cl_pt][col_count+1]:
-            print("here for cl penalty")
+            # print("here for cl penalty")
             penalty += cannot_link_penalty
 
+    return penalty
+
+# NOTE(Abid): I've decided to not give negative penalty if the keyphrases do not much, based on the reasoning that a cluster will 
+#             almost always have more topics that are different from the point than those that are similar to it.
+def penalize_keyphrase(df, data, keyphrase_df, col_count, point_idx, potential_cluster_val, penalty_vals):
+    penalty = 0.0
+    
+    point_keyphrases = (keyphrase_df.iloc[point_idx,:]).to_numpy()
+    for idx in range(len(data[:,0])):
+        test_point = df.iloc[idx,:]
+        if point_idx == idx:
+            continue
+        
+        if data[idx, col_count+1] != -1 and data[idx, col_count+1] == potential_cluster_val:
+            test_keyphrases = np.array([str(keyphrase_df.iloc[idx,0]), str(keyphrase_df.iloc[idx,2])])
+            test_weights = np.array([float(keyphrase_df.iloc[idx,1]), float(keyphrase_df.iloc[idx,3])])
+            keyphrases = np.array([point_keyphrases[0], point_keyphrases[2]])
+            weights = np.array([point_keyphrases[1], point_keyphrases[3]])
+            for pen_idx in range(len(penalty_vals)):
+                keyphrase = keyphrases[pen_idx]
+                weight = weights[pen_idx]
+                first_word = keyphrase.split(" ")[0]
+                if first_word == "<None>" or len(first_word) == 0:
+                    return penalty
+                if first_word == test_keyphrases[0].split(" ")[0]:
+#                     set_trace()
+                    penalty += ((weight+test_weights[0])/2) * penalty_vals[pen_idx]
+                elif first_word == test_keyphrases[1].split(" ")[0]:
+                    penalty += ((weight+test_weights[1])/2) * penalty_vals[pen_idx]
+#                 else:
+#                     penalty -= 0.5((weight+test_weights[pen_idx])/2) * penalty_vals[pen_idx]
     return penalty
 
 #handles case where no point is assigned to a cluster center
