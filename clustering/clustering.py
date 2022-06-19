@@ -131,18 +131,20 @@ def penalize_keyphrase(df, data, keyphrase_df, col_count, point_idx, potential_c
 
 # handles case where no point is assigned to a cluster center
 def update_centroids(num_clusters, data, col_count):
-    centroids = []
-    data_per_cluster = []
-    for clus_no in range(num_clusters):
-        if (len(data[data[:, col_count] == float(clus_no)]) > 0):
-            data_per_cluster.append(data[data[:, col_count] == float(clus_no)])
 
-    for cluster_data in data_per_cluster:
-        centroids.append(np.mean(cluster_data[:, :col_count - 1], axis=0))
+        centroids = []
+        data_per_cluster = []
+        for clus_no in range(num_clusters):
+            if (len(data[data[:, col_count] == float(clus_no)]) > 0):
+                data_per_cluster.append(data[data[:, col_count] == float(clus_no)])
 
-    no_pt_clusters = num_clusters - len(centroids)
-    if (no_pt_clusters > 0):
-        indices = np.random.choice(data.shape[0], 2, replace=False)
-        centroids = np.concatenate((centroids,data[indices, :col_count - 1]))
+        for cluster_data in data_per_cluster:
+            centroids.append(np.mean(cluster_data[:, :col_count - 1], axis=0))
 
-    return centroids
+        no_pt_clusters = num_clusters - len(centroids)
+        if (no_pt_clusters > 0):
+            indices = np.random.choice(data.shape[0], no_pt_clusters, replace=False)
+            centroids.append(data[indices, :col_count - 1])
+
+        return centroids
+
