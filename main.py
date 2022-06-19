@@ -12,11 +12,11 @@ n = len(sys.argv)
 try:
     ppline=int(sys.argv[1]) #If ppline=1 => Tfidif+sentiment ,If ppline=2 => Word2vec+LDA+sentiment
 
-    neighbours=int(sys.argv[2]) #number of neighbours
-    query_doc=sys.argv[3]  #query document id
-    n_clusters=int(sys.argv[4]) #number of clusters
-    must_link=float(sys.argv[5])
-    cannot_link=float(sys.argv[6])
+    neighbours = int(sys.argv[2])  # number of neighbours
+    query_doc = sys.argv[3]  # query document id
+    n_clusters = int(sys.argv[4])  # number of clusters
+    must_link = float(sys.argv[5])
+    cannot_link = float(sys.argv[6])
     if(ppline==1):
             print("Selected pipeline => "+"Tf_IDF+sentiment")
             doc_path="../data/tf_idf_features+sentiment.csv"
@@ -49,7 +49,6 @@ try:
     final_keyphrase=keyphrase_df[keyphrase_df.index.isin(final_data.index)]
     final_keyphrase=final_keyphrase.reindex(final_data.index)
 
-    print(final_keyphrase.index,final_data.index)
     keyphrase_penalty = np.array([10, 4])
     final_data = pd.merge(data, dataframe["class"], on="docno")
     result = pd.DataFrame(k_means(n_clusters, final_data, final_keyphrase, [], pos_doc_df, neg_doc_df, neu_doc_df, must_link,cannot_link, keyphrase_penalty))
@@ -59,12 +58,10 @@ try:
 
     now = datetime.now()
 
-    print("now =", now)
 
     dt_string = now.strftime("%d.%m.%Y %H:%M:%S")
-    print("date and time =", dt_string)
     filename='./result '+str(dt_string)+'.csv'
-    print(filename)
+    print(filename+'written succesfully')
     result.to_csv(filename,index=True)
 
 except Exception as e:

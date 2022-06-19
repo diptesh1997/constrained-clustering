@@ -28,7 +28,7 @@ def k_means(num_clusters, df, keyphrase_df, init_centres, pos_docs, neg_docs, ne
     centroids = centres[:,:col_count-1]
     data = np.hstack([data, np.zeros((len(data),1)), np.ones((len(data),1))])
     #compute the centroids till the cluster assignment remains the same
-    fit(data, df, keyphrase_df, col_count, pos_docs, neg_docs, neu_docs, centroids, num_clusters, must_link_penalty, cannot_link_penalty, keyphrase_penalty)
+    return(fit(data, df, keyphrase_df, col_count, pos_docs, neg_docs, neu_docs, centroids, num_clusters, must_link_penalty, cannot_link_penalty, keyphrase_penalty))
 
 def extract_sentiment_index(df, pos_docs, neg_docs,  neu_docs):
     pos_docs_loc = df.index.get_indexer(pos_docs.index.to_list())
@@ -38,29 +38,32 @@ def extract_sentiment_index(df, pos_docs, neg_docs,  neu_docs):
 
 #takes in a dataframe and a center vector and outputs a series with distance values of all points from the vector
 #last 2 columns reserved for cluster comparision (current cluster and prev cluster)
-def fit(data, df, keyphrase_df, col_count, pos_docs, neg_docs, neu_docs, centroids, num_clusters, must_link_penalty, cannot_link_penalty):
+def fit(data, df, keyphrase_df, col_count, pos_docs, neg_docs, neu_docs, centroids, num_clusters, must_link_penalty,
+    cannot_link_penalty,keyphrase_penalty):
     iter = 0
     pos_docs_loc, neg_docs_loc, neu_docs_loc = extract_sentiment_index(df, pos_docs, neg_docs, neu_docs)
     # print(data[:,col_count+1])
     # print(col_count)
     # print(data[:,:col_count+1])
-    
-    while(not np.array_equiv(data[:,col_count+1],data[:,col_count])):
-        if(iter!=0):
-            data[:,col_count] = data[:,col_count+1]
-            data[:,col_count+1] = -1
-            centroids = update_centroids(num_clusters, data[:,:col_count+1],col_count)
-        iter+=1
+
+    while (not np.array_equiv(data[:, col_count + 1], data[:, col_count])):
+        if (iter != 0):
+            data[:, col_count] = data[:, col_count + 1]
+            data[:, col_count + 1] = -1
+            centroids = update_centroids(num_clusters, data[:, :col_count + 1], col_count)
+        iter += 1
         for row_index, point in enumerate(data):
             dist_val = []
             for index, center in enumerate(centroids):
-                eucledian_dist = distance.euclidean(point[:col_count-1], center)
-                penalty_dist = penalize(point, data, col_count, index, pos_docs_loc, neg_docs_loc, must_link_penalty, cannot_link_penalty)
-                penalty_keyphrase = penalize_keyphrase(df, data, keyphrase_df, col_count, row_index, index, keyphrase_penalty)
-                dist_val.append(eucledian_dist+penalty_dist+penalty_keyphrase)
+                eucledian_dist = distance.euclidean(point[:col_count - 1], center)
+                penalty_dist = penalize(point, data, col_count, index, pos_docs_loc, neg_docs_loc, must_link_penalty,
+                                        cannot_link_penalty)
+                penalty_keyphrase = penalize_keyphrase(df, data, keyphrase_df, col_count, row_index, index,
+                                                       keyphrase_penalty)
+                dist_val.append(eucledian_dist + penalty_dist + penalty_keyphrase)
             cluster_val = dist_val.index(min(dist_val))
-            data[row_index,col_count+1] = cluster_val
-        print('iteration count--->',iter)
+            data[row_index, col_count + 1] = cluster_val
+        print('iteration count--->', iter)
     return data
     # pd.DataFrame(data).to_csv('./sentiment_clusters.csv')
 
@@ -126,15 +129,20 @@ def penalize_keyphrase(df, data, keyphrase_df, col_count, point_idx, potential_c
 #                     penalty -= 0.5((weight+test_weights[pen_idx])/2) * penalty_vals[pen_idx]
     return penalty
 
-#handles case where no point is assigned to a cluster center
+# handles case where no point is assigned to a cluster center
 def update_centroids(num_clusters, data, col_count):
-    
     centroids = []
     data_per_cluster = []
     for clus_no in range(num_clusters):
-        data_per_cluster.append(data[data[:,col_count]== float(clus_no)])
-    
+        if (len(data[data[:, col_count] == float(clus_no)]) > 0):
+            data_per_cluster.append(data[data[:, col_count] == float(clus_no)])
+
     for cluster_data in data_per_cluster:
-        centroids.append(np.mean(cluster_data[:,:col_count-1], axis=0))
-    
+        centroids.append(np.mean(cluster_data[:, :col_count - 1], axis=0))
+
+    no_pt_clusters = num_clusters - len(centroids)
+    if (no_pt_clusters > 0):
+        indices = np.random.choice(data.shape[0], 2, replace=False)
+        centroids = np.concatenate((centroids,data[indices, :col_count - 1]))
+
     return centroids
