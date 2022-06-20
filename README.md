@@ -37,26 +37,6 @@ Step 5: Constraint Extraction:
 
 2. **Keyphrasification**: Please check out the comments in `keyphrase_extraction.py` before using the routine.
 
-**TODO**
+Poster:
 
-Heuristics & Hyperparameter selection
-
-1. Clustering & involving constraints: Harshit
-2. Evaluation
-3. Poster
-    a) Data preperation 
-        1. (Preprocessing)
-        2. Feature extraction (Topic modelling + Keyphrases): Everyone : 17th Jun
-    b) Constraints: Sentiments as Constraints: Visakh and Diptesh
-    c) K-means Objective: Harshit & pentality
-    d) Evaluation: Silhoutte score and jackard coefficient:
-    e) Explainability:
-    f) Visualizations:
-        1. Objective Function: Harshit
-        2. Sentiment Exploration Dataset: Diptesh / word cloud
-        3. Comparision plotted for bow and other pipeline:  Abid, Harshit 
-        4. Keypharase clustering diagram: Abid
-
-
-
-
+![Poster](./poster.png)
