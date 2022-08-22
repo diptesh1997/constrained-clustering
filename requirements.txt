@@ -1,0 +1,9 @@
+scikit-image
+sklearn
+joblib
+numpy
+opencv-python
+matplotlib
+pandas
+seaborn
+pytest
